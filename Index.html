@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEDEASE - Appointment Management</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <section id="auth">
+        <div>
+            <h2 id="auth-title">Login</h2>
+            <p>Sign in to manage appointments</p>
+        </div>
+
+        <p id="error" style="display: none;"></p>
+        <input id="emailInput" placeholder="Email" />
+        <input id="passwordInput" placeholder="Password" type="password" />
+        
+        <select id="roleSelect">
+            <option value="user">User</option>
+            <option value="doctor">Doctor</option>
+            <option value="admin">Admin</option>
+        </select>
+
+        <button id="authBtn" onclick="authenticate()">Submit</button>
+        <hr />
+        <div class="register-content">
+            <p>Don't have an account?</p>
+            <button onclick="toggleRegister()" id="registerBtn">Sign up</button>
+        </div>
+    </section>
+
+    <header style="display: none;">
+        <h1 class="text-gradient">Welcome to MEDEASE</h1>
+    </header>
+
+    <main style="display: none;">
+        <h3 id="dashboardTitle"></h3>
+        <div id="dashboardContent"></div>
+    </main>
+</body>
+
+<script>
+    let token = localStorage.getItem('token');
+    let role = localStorage.getItem('role');
+    let isRegistering = false;
+
+    const apiBase = '/api/v1/';
+
+    const authSection = document.getElementById('auth');
+    const errorMsg = document.getElementById('error');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const roleSelect = document.getElementById('roleSelect');
+    const authBtn = document.getElementById('authBtn');
+    const registerBtn = document.getElementById('registerBtn');
+
+    const header = document.querySelector('header');
+    const main = document.querySelector('main');
+    const dashboardTitle = document.getElementById('dashboardTitle');
+    const dashboardContent = document.getElementById('dashboardContent');
+
+    function toggleRegister() {
+        isRegistering = !isRegistering;
+        document.getElementById('auth-title').innerText = isRegistering ? 'Sign Up' : 'Login';
+        registerBtn.innerText = isRegistering ? 'Sign in' : 'Sign up';
+    }
+
+    async function authenticate() {
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        const selectedRole = roleSelect.value;
+
+        if (!email || !password || password.length < 6 || !email.includes('@')) {
+            errorMsg.innerText = "Invalid email or password";
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        errorMsg.style.display = 'none';
+        authBtn.innerText = isRegistering ? "Registering..." : "Logging in...";
+
+        try {
+            const response = await fetch(apiBase + selectedRole + (isRegistering ? '/register' : '/login'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+            if (data.token) {
+                token = data.token;
+                role = selectedRole;
+                localStorage.setItem('token', token);
+                localStorage.setItem('role', role);
+
+                authBtn.innerText = "Success!";
+                showDashboard();
+            } else {
+                throw new Error("Authentication failed");
+            }
+        } catch (err) {
+            errorMsg.innerText = err.message;
+            errorMsg.style.display = 'block';
+        } finally {
+            authBtn.innerText = "Submit";
+        }
+    }
+
+    async function showDashboard() {
+        authSection.style.display = 'none';
+        header.style.display = 'block';
+        main.style.display = 'block';
+
+        let dashboardAPI = '';
+        if (role === 'user') {
+            dashboardAPI = 'user/profile';
+            dashboardTitle.innerText = "User Dashboard";
+        } else if (role === 'doctor') {
+            dashboardAPI = 'doctor/profile';
+            dashboardTitle.innerText = "Doctor Dashboard";
+        } else if (role === 'admin') {
+            dashboardAPI = 'admin/dashboard';
+            dashboardTitle.innerText = "Admin Panel";
+        }
+
+        try {
+            const response = await fetch(apiBase + dashboardAPI, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+            dashboardContent.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        } catch (err) {
+            dashboardContent.innerText = "Error loading data";
+        }
+    }
+
+    if (token) {
+        showDashboard();
+    }
+</script>
+
+</html>

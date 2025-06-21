@@ -1,0 +1,29 @@
+{
+  "name": "doc-appointment-system",
+  "version": "1.0.0",
+  "description": "MEDEASE is a full-stack web application built using the MERN (MongoDB, Express.js, React.js, Node.js) stack. It serves as a platform where patients can easily book appointments with doctors, doctors can manage appointments, and administrators can oversee the entire system.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "server": "nodemon serevr.js",
+    "client": "npm start --prefix ./client ",
+    "dev": "concurrently \"npm start\" \"npm run client\""
+  },
+  "keywords": [],
+  "author": "Recursive Reapers",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "colors": "^1.4.0",
+    "concurrently": "^8.2.2",
+    "create-react-app": "^5.0.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.30.1",
+    "mongoose": "^8.1.3",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.0.3"
+  }
+}
